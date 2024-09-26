@@ -37,6 +37,14 @@ func main() {
 		}
 	}()
 
+	// 처음 실행할 때 익스체인지를 만들어둔다.
+	exchangeName := os.Getenv("RMQ_EXCHANGE_NAME")
+
+	_, err := declareMqExchange(exchangeName)
+	if err != nil {
+		panic(err)
+	}
+
 	select {
 	case shutdownMsg := <-shutdownCh:
 		_ = server.Shutdown(context.Background())
@@ -78,17 +86,9 @@ func handleOnGitHubPush(writer http.ResponseWriter, request *http.Request) {
 }
 
 func publishToMqExchange(payload []byte) error {
-	conn, err := amqp.Dial(os.Getenv("RMQ_ADDR"))
-	if err != nil {
-		return err
-	}
+	exchangeName := os.Getenv("RMQ_EXCHANGE_NAME")
 
-	ch, err := conn.Channel()
-	if err != nil {
-		return err
-	}
-
-	err = ch.Confirm(false)
+	ch, err := declareMqExchange(exchangeName)
 	if err != nil {
 		return err
 	}
@@ -111,21 +111,7 @@ func publishToMqExchange(payload []byte) error {
 
 	log.Printf("Pushed on repository %v by %v\n", githubPush.Repository.FullName, githubPush.Pusher.Name)
 
-	exchangeName := os.Getenv("RMQ_EXCHANGE_NAME")
 	routingKey := githubPush.Repository.FullName
-
-	err = ch.ExchangeDeclare(
-		exchangeName,
-		"direct",
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -142,4 +128,35 @@ func publishToMqExchange(payload []byte) error {
 		})
 
 	return nil
+}
+
+func declareMqExchange(exchangeName string) (*amqp.Channel, error) {
+	conn, err := amqp.Dial(os.Getenv("RMQ_ADDR"))
+	if err != nil {
+		return nil, err
+	}
+
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, err
+	}
+
+	err = ch.Confirm(false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = ch.ExchangeDeclare(
+		exchangeName,
+		"direct",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return ch, nil
 }
