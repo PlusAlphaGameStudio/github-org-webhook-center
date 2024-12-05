@@ -92,6 +92,9 @@ func publishToMqExchange(payload []byte) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		_ = ch.Close()
+	}()
 
 	log.Printf("Payload %v bytes received from GitHub", len(payload))
 
