@@ -1,6 +1,6 @@
 module github-org-webhook-center
 
-go 1.20
+go 1.19
 
 require (
 	github.com/google/go-github/v38 v38.1.0

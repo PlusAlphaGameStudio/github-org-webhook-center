@@ -12,6 +12,16 @@ import (
 	"time"
 )
 
+type BrokerClient struct {
+	connection *amqp.Connection
+	channel    *amqp.Channel
+}
+
+func (c *BrokerClient) Close() {
+	_ = c.channel.Close()
+	_ = c.connection.Close()
+}
+
 var shutdownCh chan string
 
 func main() {
@@ -40,10 +50,11 @@ func main() {
 	// 처음 실행할 때 익스체인지를 만들어둔다.
 	exchangeName := os.Getenv("RMQ_EXCHANGE_NAME")
 
-	_, err := declareMqExchange(exchangeName)
+	brokerClient, err := createBrokerClient(exchangeName)
 	if err != nil {
 		panic(err)
 	}
+	brokerClient.Close()
 
 	select {
 	case shutdownMsg := <-shutdownCh:
@@ -88,13 +99,11 @@ func handleOnGitHubPush(writer http.ResponseWriter, request *http.Request) {
 func publishToMqExchange(payload []byte) error {
 	exchangeName := os.Getenv("RMQ_EXCHANGE_NAME")
 
-	ch, err := declareMqExchange(exchangeName)
+	brokerClient, err := createBrokerClient(exchangeName)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = ch.Close()
-	}()
+	defer brokerClient.Close()
 
 	log.Printf("Payload %v bytes received from GitHub", len(payload))
 
@@ -120,7 +129,7 @@ func publishToMqExchange(payload []byte) error {
 	defer cancel()
 
 	body := "push"
-	err = ch.PublishWithContext(ctx,
+	err = brokerClient.channel.PublishWithContext(ctx,
 		exchangeName, // exchange
 		routingKey,   // routing key
 		false,        // mandatory
@@ -133,7 +142,7 @@ func publishToMqExchange(payload []byte) error {
 	return nil
 }
 
-func declareMqExchange(exchangeName string) (*amqp.Channel, error) {
+func createBrokerClient(exchangeName string) (*BrokerClient, error) {
 	conn, err := amqp.Dial(os.Getenv("RMQ_ADDR"))
 	if err != nil {
 		return nil, err
@@ -161,5 +170,9 @@ func declareMqExchange(exchangeName string) (*amqp.Channel, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ch, nil
+
+	return &BrokerClient{
+		connection: conn,
+		channel:    ch,
+	}, nil
 }
