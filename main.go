@@ -128,7 +128,6 @@ func publishToMqExchange(payload []byte) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	body := "push"
 	err = brokerClient.channel.PublishWithContext(ctx,
 		exchangeName, // exchange
 		routingKey,   // routing key
@@ -136,7 +135,7 @@ func publishToMqExchange(payload []byte) error {
 		false,        // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
-			Body:        []byte(body),
+			Body:        payload, // 웹훅 payload를 그대로 전달(릴레이)한다.
 		})
 
 	return nil
