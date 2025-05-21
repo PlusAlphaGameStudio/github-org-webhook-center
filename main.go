@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-github/v38/github"
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -67,6 +68,11 @@ func main() {
 
 func handleOnGitHubPush(writer http.ResponseWriter, request *http.Request) {
 	log.Println("handleOnGitHubPush")
+
+	log.Println("===OnGitHubPush body begin===")
+	body, _ := io.ReadAll(request.Body)
+	log.Println(string(body))
+	log.Println("===OnGitHubPush body end===")
 
 	payload, err := github.ValidatePayload(request, []byte(os.Getenv("GITHUB_SECRET_TOKEN")))
 	if err != nil {
