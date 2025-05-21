@@ -134,7 +134,7 @@ func publishToMqExchange(payload []byte) error {
 		false,        // mandatory
 		false,        // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        payload, // 웹훅 payload를 그대로 전달(릴레이)한다.
 		})
 
