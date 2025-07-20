@@ -74,9 +74,9 @@ type GitHubPushPayload struct {
 		LabelsUrl                string        `json:"labels_url"`
 		ReleasesUrl              string        `json:"releases_url"`
 		DeploymentsUrl           string        `json:"deployments_url"`
-		CreatedAt                time.Time     `json:"created_at"`
+		CreatedAt                interface{}   `json:"created_at"` // Ping 푸시일 땐 time.Time으로 왔다가, 진짜 push가 올 땐 int로 왔다가 GitHub가 오락가락한다. 어이가 없네... 안쓰니까 빼자
 		UpdatedAt                time.Time     `json:"updated_at"`
-		PushedAt                 time.Time     `json:"pushed_at"`
+		PushedAt                 interface{}   `json:"pushed_at"` // Ping 푸시일 땐 time.Time으로 왔다가, 진짜 push가 올 땐 int로 왔다가 GitHub가 오락가락한다. 어이가 없네... 안쓰니까 빼자
 		GitUrl                   string        `json:"git_url"`
 		SshUrl                   string        `json:"ssh_url"`
 		CloneUrl                 string        `json:"clone_url"`
