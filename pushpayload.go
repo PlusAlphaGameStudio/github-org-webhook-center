@@ -74,9 +74,9 @@ type GitHubPushPayload struct {
 		LabelsUrl                string        `json:"labels_url"`
 		ReleasesUrl              string        `json:"releases_url"`
 		DeploymentsUrl           string        `json:"deployments_url"`
-		CreatedAt                int           `json:"created_at"`
+		CreatedAt                time.Time     `json:"created_at"`
 		UpdatedAt                time.Time     `json:"updated_at"`
-		PushedAt                 int           `json:"pushed_at"`
+		PushedAt                 time.Time     `json:"pushed_at"`
 		GitUrl                   string        `json:"git_url"`
 		SshUrl                   string        `json:"ssh_url"`
 		CloneUrl                 string        `json:"clone_url"`
@@ -199,4 +199,3 @@ type GitHubPushPayload struct {
 		Modified []string      `json:"modified"`
 	} `json:"head_commit"`
 }
-
